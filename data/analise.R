@@ -95,5 +95,18 @@ tapply(datasetcovid$TEMP_SIN, datasetcovid$CARDIOPATI, summary)
 tapply(datasetcovid$TEMP_SIN, datasetcovid$CARDIOPATI, sd)
 plot(datasetcovid$TEMP_SIN ~ datasetcovid$CARDIOPATI, ylab = "Tempo", xlab = "Cardiopatia")
 
-#Cormobidades X Obitos
+#UTI X Obitos
 
+Obito <- factor(datasetcovid$EVOLUCAO,
+                labels = c("Sim", "Nao"),
+                levels = c(1,0))
+
+tabela_3 <- table(datasetcovid$UTI, Obito)
+row.names(tabela_3) <- c("NAO UTI", "UTI")
+tabela_3
+
+mosaicplot(tabela_3, col = c("aquamarine", "lightblue"), cex =1.1,
+           main = "Pacientes Internados" )
+
+Q2 <- chisq.test(tabela_3)
+Q2
