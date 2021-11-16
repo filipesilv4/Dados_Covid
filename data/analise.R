@@ -110,3 +110,33 @@ mosaicplot(tabela_3, col = c("aquamarine", "lightblue"), cex =1.1,
 
 Q2 <- chisq.test(tabela_3)
 Q2
+
+tabela_4 <- table(datasetcovid$CS_SEXO, Obito)
+
+Q2 <- chisq.test(tabela_4)
+Q2
+
+tabela_5 <- table(datasetcovid$CS_ESCOL_N, Obito)
+Q2 <- chisq.test(tabela_5)
+Q2
+
+tabela_6 <- table(datasetcovid$CS_RACA, Obito)
+Q2 <- chisq.test(tabela_6)
+Q2
+
+tabela_7 <- table(datasetcovid$OBESIDADE, Obito)
+Q2 <- chisq.test(tabela_7)
+Q2
+
+tabela_8 <- table(datasetcovid$DIABETES, Obito)
+Q2 <- chisq.test(tabela_8)
+Q2
+
+tabela_9 <- table(datasetcovid$CARDIOPATI, Obito)
+Q2 <- chisq.test(tabela_9)
+Q2
+
+tabela_10 <- table(datasetcovid$ASMA, Obito)
+Q2 <- chisq.test(tabela_10)
+Q2
+
