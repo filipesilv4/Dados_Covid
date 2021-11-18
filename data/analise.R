@@ -70,14 +70,6 @@ tapply(datasetcovid$TEMP_SIN, datasetcovid$OBESIDADE, summary)
 tapply(datasetcovid$TEMP_SIN, datasetcovid$OBESIDADE, sd)
 plot(datasetcovid$TEMP_SIN ~ datasetcovid$OBESIDADE, ylab = "Tempo" , xlab = "Obesidade")
 
-#Associação entre as variáveis
-#fprov = table(datasetcovid$OBESIDADE)
-#variancias <- tapply(datasetcovid$TEMP_SIN, datasetcovid$OBESIDADE, var)
-#s2barra = weighted.mean(variancias, fprov)
-#s2 = var(datasetcovid$TEMP_SIN)
-#R2 <- 1 - (s2barra/s2)
-#R2
-
 # Distribuição e boxplot entre asma e tempo entre os primeiros sintomas e a data de evolução
 
 tapply(datasetcovid$TEMP_SIN, datasetcovid$ASMA, summary)
@@ -96,6 +88,7 @@ plot(datasetcovid$TEMP_SIN ~ datasetcovid$DIABETES, ylab = "Tempo", xlab = "Diab
 tapply(datasetcovid$TEMP_SIN, datasetcovid$CARDIOPATI, summary)
 tapply(datasetcovid$TEMP_SIN, datasetcovid$CARDIOPATI, sd)
 plot(datasetcovid$TEMP_SIN ~ datasetcovid$CARDIOPATI, ylab = "Tempo", xlab = "Cardiopatia")
+
 
 #UTI X Obitos
 
@@ -176,17 +169,22 @@ Q2
 
 #Idade X Obito
 
-tabela_9 <- table(cut(datasetcovid$NU_IDADE_N, breaks = c(0,19,60,102)), Obito)
-row.names(tabela_9) <- c("Jovem", "Adulto", "Idoso")
-tabela_9
+idadeFaixaEtaria <- cut(datasetcovid$NU_IDADE_N, c(0,19,60,102),
+                         labels = c("Jovem", "Adulto", "Idoso"), order = T)
 
+tabela_9 <- table(idadeFaixaEtaria, Obito)
+tabela_9
 
 barplot(tabela_9,
         beside = TRUE,
-        legend = c("Jovem", "Adulto", "idoso"),
+        legend = c("Jovem", "Adulto", "Idoso"),
         args.legend = list(x = "top", bty = "n", ncol = 3),
+        col = c("#1E90FF", "#00008B", "#191970"),
         ylim = c(0, 1600),
         main = "Pacientes por Faixa Etária")
+
+Q2 <- chisq.test(tabela_9)
+Q2
 
 
 # Escolaridade X Obito
@@ -197,11 +195,13 @@ barplot(tabela_10,
         beside = TRUE,
         legend = c("Sem escolaridade", "Fundamental 1", "Fundamental 2 ", "Médio", "Superior"),
         args.legend = list(x = "top", bty = "n", ncol = 5),
+        col = c("#FA8072","#E9967A","#FFA07A","#FF7F50","#FF6347"),
         ylim = c(0, 900),
         main = "Pacientes por Escolaridade")
 
 Q2 <- chisq.test(tabela_10)
 Q2
+
 
 # Raca X Obito
 tabela_11 <- table(datasetcovid$CS_RACA, Obito)
@@ -211,41 +211,64 @@ barplot(tabela_11,
         beside = TRUE,
         legend = c("Branca", "Preta", "Amarela", "Parda", "Indigena"),
         args.legend = list(x = "top", bty = "n", ncol = 5),
+        col = c("#FFFF00", "#FFD700", "#FFA500", "#FF8C00", "#FF4500"),
         ylim = c(0, 1600),
         main = "Pacientes por Raça")
 
 Q2 <- chisq.test(tabela_11)
 Q2
 
+
 # Sobrevivencia
 
-## Kaplan-Meier 
-
 attach(datasetcovid)
+
+## UTI
 km_1 <- datasetcovid %>% 
-  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ UTI + DIABETES))
+  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ UTI))
 
+ggsurvplot(km_1, risk.table = F, data = datasetcovid)
+
+survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ UTI, rho=0)
+
+## ASMA
 km_2 <- datasetcovid %>% 
-  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ UTI + ASMA))
+  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ ASMA))
 
+ggsurvplot(km_2, risk.table = F, data = datasetcovid)
+
+survdiff(Surv(TEMP_SIN,EVOLUCAO) ~  ASMA, rho=0)
+
+##CARDIOPATIA
 km_3 <- datasetcovid %>% 
-  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ UTI + CARDIOPATI))
+  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ CARDIOPATI))
 
+ggsurvplot(km_3, risk.table = F, data = datasetcovid)
+
+survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ CARDIOPATI, rho=0)
+
+#DIABETES
 km_4 <- datasetcovid %>% 
-  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ UTI + ASMA + CARDIOPATI + DIABETES))
+  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~  DIABETES))
 
-ggsurvplot(km_1, risk.table = T, data = datasetcovid)
-ggsurvplot(km_2, risk.table = T, data = datasetcovid)
-ggsurvplot(km_3, risk.table = T, data = datasetcovid)
 ggsurvplot(km_4, risk.table = F, data = datasetcovid)
 
-summary(km_4)
+survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ DIABETES, rho=0)
 
-## Função Acumulada
+## FAIXA ETÁRIA
+km_5 <- datasetcovid %>% 
+  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~  idadeFaixaEtaria))
 
+ggsurvplot(km_5, risk.table = F, data = idadeFaixaEtaria)
 
-## Log-Rank
+survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ idadeFaixaEtaria, rho=0)
 
-survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ UTI + ASMA + CARDIOPATI + DIABETES, rho=0)
+## ESCOLARIDADE
+km_6 <- datasetcovid %>% 
+  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~  CS_ESCOL_N))
 
+ggsurvplot(km_6, risk.table = F, data = datasetcovid)
 
+survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ CS_ESCOL_N, rho=0)
+
+## Residuos de Schoenfeld
