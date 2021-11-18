@@ -2,7 +2,8 @@ library(readr)
 library(dplyr)
 library(psych)
 library(ggplot2)
-
+library(survival)
+library(survminer)
 
 datasetcovid <- read_csv("datasetcovid.csv")
 
@@ -215,5 +216,36 @@ barplot(tabela_11,
 
 Q2 <- chisq.test(tabela_11)
 Q2
+
+# Sobrevivencia
+
+## Kaplan-Meier 
+
+attach(datasetcovid)
+km_1 <- datasetcovid %>% 
+  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ UTI + DIABETES))
+
+km_2 <- datasetcovid %>% 
+  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ UTI + ASMA))
+
+km_3 <- datasetcovid %>% 
+  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ UTI + CARDIOPATI))
+
+km_4 <- datasetcovid %>% 
+  with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ UTI + ASMA + CARDIOPATI + DIABETES))
+
+ggsurvplot(km_1, risk.table = T, data = datasetcovid)
+ggsurvplot(km_2, risk.table = T, data = datasetcovid)
+ggsurvplot(km_3, risk.table = T, data = datasetcovid)
+ggsurvplot(km_4, risk.table = F, data = datasetcovid)
+
+summary(km_4)
+
+## Função Acumulada
+
+
+## Log-Rank
+
+survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ UTI + ASMA + CARDIOPATI + DIABETES, rho=0)
 
 
