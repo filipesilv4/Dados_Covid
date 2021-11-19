@@ -219,7 +219,8 @@ Q2 <- chisq.test(tabela_11)
 Q2
 
 
-# Sobrevivencia
+# Gráficos de Sobrevivência de Kaplan-Meier, gráfico de taxa (função) falha acumulada
+# e teste logRANK.
 
 attach(datasetcovid)
 
@@ -227,7 +228,14 @@ attach(datasetcovid)
 km_1 <- datasetcovid %>% 
   with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ UTI))
 
-ggsurvplot(km_1, risk.table = F, data = datasetcovid)
+ggsurvplot(km_1, risk.table = F,
+           palette = c("#FF9E29", "#86AA00"),
+           data = datasetcovid)
+
+ggsurvplot(km_1, conf.int = T, 
+           palette = c("#FF9E29", "#86AA00"),
+           risk.table = F, risk.table.col = "strata",
+           fun = "event", data = datasetcovid)
 
 survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ UTI, rho=0)
 
@@ -235,7 +243,14 @@ survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ UTI, rho=0)
 km_2 <- datasetcovid %>% 
   with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ ASMA))
 
-ggsurvplot(km_2, risk.table = F, data = datasetcovid)
+ggsurvplot(km_2, risk.table = F,
+           palette = c("#11F872", "#1DF0EC"),
+           data = datasetcovid)
+
+ggsurvplot(km_2, conf.int = T, 
+                 palette = c("#11F872", "#1DF0EC"),
+                 risk.table = F, risk.table.col = "strata",
+                 fun = "event", data = datasetcovid)
 
 survdiff(Surv(TEMP_SIN,EVOLUCAO) ~  ASMA, rho=0)
 
@@ -243,7 +258,14 @@ survdiff(Surv(TEMP_SIN,EVOLUCAO) ~  ASMA, rho=0)
 km_3 <- datasetcovid %>% 
   with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~ CARDIOPATI))
 
-ggsurvplot(km_3, risk.table = F, data = datasetcovid)
+ggsurvplot(km_3, risk.table = F,
+           palette = c("#0FD99C", "#0FA7D9"),
+           data = datasetcovid)
+
+ggsurvplot(km_3, conf.int = T, 
+           palette = c("#0FD99C", "#0FA7D9"),
+           risk.table = F, risk.table.col = "strata",
+           fun = "event", data = datasetcovid)
 
 survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ CARDIOPATI, rho=0)
 
@@ -251,7 +273,14 @@ survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ CARDIOPATI, rho=0)
 km_4 <- datasetcovid %>% 
   with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~  DIABETES))
 
-ggsurvplot(km_4, risk.table = F, data = datasetcovid)
+ggsurvplot(km_4, risk.table = F,
+           palette = c("#FAC0EE", "#6125D9"),
+           data = datasetcovid)
+
+ggsurvplot(km_4, conf.int = T, 
+           palette = c("#FAC0EE", "#6125D9"),
+           risk.table = F, risk.table.col = "strata",
+           fun = "event", data = datasetcovid)
 
 survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ DIABETES, rho=0)
 
@@ -259,7 +288,13 @@ survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ DIABETES, rho=0)
 km_5 <- datasetcovid %>% 
   with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~  idadeFaixaEtaria))
 
-ggsurvplot(km_5, risk.table = F, data = idadeFaixaEtaria)
+ggsurvplot(km_5, risk.table = F,
+           data = idadeFaixaEtaria)
+
+ggsurvplot(km_5, conf.int = T,
+           risk.table = F, risk.table.col = "strata",
+           fun = "event", data = idadeFaixaEtaria)
+
 
 survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ idadeFaixaEtaria, rho=0)
 
@@ -267,7 +302,15 @@ survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ idadeFaixaEtaria, rho=0)
 km_6 <- datasetcovid %>% 
   with(survfit(Surv(TEMP_SIN,EVOLUCAO) ~  CS_ESCOL_N))
 
-ggsurvplot(km_6, risk.table = F, data = datasetcovid)
+ggsurvplot(km_6, risk.table = T,
+           palette = c("#F0E207", "#43BAF0", "#7289F0", "#F034C2", "#F08D18"),
+           data = datasetcovid)
+
+ggsurvplot(km_6, conf.int = T, 
+           palette = c("#F0E207", "#43BAF0", "#7289F0", "#F034C2", "#F08D18"),
+           risk.table = F, risk.table.col = "strata",
+           fun = "event", data = datasetcovid)
+
 
 survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ CS_ESCOL_N, rho=0)
 
