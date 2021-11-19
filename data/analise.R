@@ -122,10 +122,9 @@ tabela_5 <- table(datasetcovid$OBESIDADE, Obito)
 row.names(tabela_5) <- c("Possui_Obesidade", "Nao_Possui_Obesidade")
 tabela_5
 
-barplot(tabela_5,
-        main = "Pacientes com Obesidade",
-        ylim = c(0, 2300),
-        col = c("#836FFF", "#483D8B"))
+mosaicplot(tabela_5, col = c("#836FFF", "#483D8B"), cex =1.1,
+           main = "Pacientes com Obesidade" )
+
 
 Q2 <- chisq.test(tabela_5)
 Q2
@@ -134,6 +133,7 @@ Q2
 tabela_6 <- table(datasetcovid$DIABETES, Obito)
 row.names(tabela_6) <- c("Possui_Diabetes", "Nao_Possui_Diabetes")
 tabela_6
+
 barplot(tabela_6,
         main = "Pacientes com Diabetes",
         ylim = c(0, 2500),
@@ -159,7 +159,10 @@ Q2
 tabela_8 <- table(datasetcovid$ASMA, Obito)
 row.names(tabela_8) <- c("Possui_Asma", "Nao_Possui_Asma")
 tabela_8
+
+
 barplot(tabela_8,
+        beside = T,
         main = "Pacientes com Asma",
         ylim = c(0, 2200),
         col = c("#F4A460", "#FFDEAD"))
@@ -215,6 +218,7 @@ barplot(tabela_11,
         ylim = c(0, 1600),
         main = "Pacientes por Raça")
 
+#(usar teste exato de fisher)
 Q2 <- chisq.test(tabela_11)
 Q2
 
@@ -315,3 +319,11 @@ ggsurvplot(km_6, conf.int = T,
 survdiff(Surv(TEMP_SIN,EVOLUCAO) ~ CS_ESCOL_N, rho=0)
 
 ## Residuos de Schoenfeld
+
+cox_covid <- coxph(Surv(TEMP_SIN,EVOLUCAO) ~ UTI + ASMA + CARDIOPATI + DIABETES
+                   + idadeFaixaEtaria +  CS_ESCOL_N)
+
+summary(cox_covid)
+
+par(mfrow = c(3,3))
+plot(cox.zph(cox_covid))
