@@ -6,11 +6,15 @@ library(survival)
 library(survminer)
 library(bbmle)
 library(cowplot)
-
+library(gmodels)
+data(SP_covid)
+str(SP_covid)
 dataset <- SP_covid
 View(dataset)
 
+
 #Transformando em fator as vari√°veis
+
 
 dataset$sex <- factor(dataset$sex, labels = c("Masculino", "Feminino"), 
                       levels = c(0,1))
@@ -25,7 +29,7 @@ dataset$ethnicities <- factor(dataset$ethnicities,
                           labels = c("Branca", "Preta", "Amarela", "Parda",
                                      "Indigena"),
                           levels = c("White", "Black", "Asian", "Pardo",
-                                     "Indigineous"))
+                                     "Indigenous"))
 
 dataset$obesity <- factor(dataset$obesity,
                             labels = c("Nao", "Sim"),
@@ -52,69 +56,149 @@ dataset$age_group <- factor(dataset$age_group,
                              levels = c("Young", "Adult", "Elderly"))
 
 
-glimpse(dataset)
-attach(dataset)
+
 
 #Analise Descritiva
 
-#colocar todos os gr√°ficos ou parte deles na mesma imagem
+##filtros
 
-# tabela cruzada sexo e escolaridade
-tabela <- table(sex, schooling)
-prop.table(tabela)
+#Sem Patologia
 
-#Distribui√ß√£o e boxplot entre obesidade e tempo entre os primeiros sintomas e a data de evolu√ß√£o
-tapply(time_symptoms, age_group, summary)
-tapply(time_symptoms, age_group, sd)
-p1 <- dataset %>% ggplot(aes(x = age_group , y = time_symptoms)) + geom_boxplot()
+dataset2 <- dataset %>% filter(
+  dataset$asthma == "Nao" & dataset$cardiopathy == "Nao" &
+    dataset$obesity == "Nao" & dataset$diabetes == "Nao"
+)
 
-# Distribui√ß√£o e boxplot entre obesidade e tempo entre os primeiros sintomas e a data de evolu√ß√£o
-tapply(time_symptoms, obesity, summary)
-tapply(time_symptoms, obesity, sd)
-p2 <- dataset %>% ggplot(aes(x = obesity , y = time_symptoms)) + geom_boxplot()
-
-# Distribui√ß√£o e boxplot entre asma e tempo entre os primeiros sintomas e a data de evolu√ß√£o
-tapply(time_symptoms, asthma, summary)
-tapply(time_symptoms, asthma, sd)
-p3 <- dataset %>% ggplot(aes(x = asthma , y = time_symptoms)) + geom_boxplot()
+table(dataset2$diabetes)
 
 
-# Distribui√ß√£o e boxplot entre diabetes e tempo entre os primeiros sintomas e a data de evolu√ß√£o
-tapply(time_symptoms, diabetes, summary)
-tapply(time_symptoms, diabetes, sd)
-p4 <- dataset %>% ggplot(aes(x = diabetes , y = time_symptoms)) + geom_boxplot()
+#Paciente apenas com asma
+dataset2 <- dataset %>% filter(
+  dataset$asthma == "Sim" & dataset$cardiopathy == "Nao" &
+    dataset$obesity == "Nao" & dataset$diabetes == "Nao"
+)
+table(dataset2$asthma)
+prop.table(table(dataset2$asthma, dataset2$censure))
+prop.table(table(dataset2$asthma, dataset2$icu))
 
-# Distribui√ß√£o e boxplot entre cardiopatia e tempo entre os primeiros sintomas e a data de evolu√ß√£o
-tapply(time_symptoms, cardiopathy, summary)
-tapply(time_symptoms, cardiopathy, sd)
-p5 <- dataset %>% ggplot(aes(x = cardiopathy , y = time_symptoms)) + geom_boxplot()
+#Paciente com asma e cardiopatia
+dataset2 <- dataset %>% filter(
+  dataset$asthma == "Sim" & dataset$cardiopathy == "Sim" &
+    dataset$obesity == "Nao" & dataset$diabetes == "Nao"
+)
+table(dataset2$asthma, dataset2$cardiopathy)
 
-# Distribui√ß√£o e boxplot entre uti e tempo entre os primeiros sintomas e a data de evolu√ß√£o
-tapply(time_symptoms, icu, summary)
-tapply(time_symptoms, icu, sd)
-p6 <- dataset %>% ggplot(aes(x = icu , y = time_symptoms)) + geom_boxplot()
+#Paciente com asma e diabetes
+dataset2 <- dataset %>% filter(
+  dataset$asthma == "Sim" & dataset$cardiopathy == "Nao" & 
+    dataset$obesity == "Nao" & dataset$diabetes == "Sim"
+)
+table(dataset2$asthma, dataset2$diabetes)
 
-plot_grid(p1, p2, p3, p4, p5, p6) # figura 1
+#Paciente com asma e obesidade
+dataset2 <- dataset %>% filter(
+  dataset$asthma == "Sim" & dataset$cardiopathy == "Nao" & 
+    dataset$obesity == "Sim" & dataset$diabetes == "Nao"
+)
+table(dataset2$asthma, dataset2$obesity)
+
+#Paciente apenas com cardiopatia
+dataset2 <- dataset %>% filter(
+  dataset$asthma == "Nao" & dataset$cardiopathy == "Sim" &
+    dataset$obesity == "Nao" & dataset$diabetes == "Nao"
+)
+table(dataset2$cardiopathy)
+prop.table(table(dataset2$cardiopathy, dataset2$censure))
+prop.table(table(dataset2$cardiopathy, dataset2$icu))
 
 
-#UTI X Obitos
-obito <- factor(censure,
-                labels = c("Sim", "Nao"),
-                levels = c(1,0))
+#Paciente com cardiopatia e diabetes
+dataset2 <- dataset %>% filter(
+  dataset$asthma == "Nao" & dataset$cardiopathy == "Sim" &
+    dataset$obesity == "Nao" & dataset$diabetes == "Sim"
+)
 
-tabela_1 <- table(icu, obito)
+table(dataset2$cardiopathy, dataset2$diabetes)
+
+#Paciente com cardiopatia e obesidade
+dataset2 <- dataset %>% filter(
+  dataset$asthma == "Nao" & dataset$cardiopathy == "Sim" &
+    dataset$obesity == "Sim" & dataset$diabetes == "Nao"
+)
+
+table(dataset2$cardiopathy, dataset2$obesity)
+
+#Paciente apenas com diabetes
+dataset2 <- dataset %>% filter(
+  dataset$asthma == "Nao" & dataset$cardiopathy == "Nao" &
+    dataset$obesity == "Nao" & dataset$diabetes == "Sim"
+)
+table(dataset2$diabetes)
+prop.table(table(dataset2$diabetes, dataset2$censure))
+prop.table(table(dataset2$diabetes, dataset2$icu))
+
+#Paciente com diabetes e obesidade
+dataset2 <- dataset %>% filter(
+  dataset$asthma == "Nao" & dataset$cardiopathy == "Nao" &
+    dataset$obesity == "Sim" & dataset$diabetes == "Sim"
+)
+table(dataset2$diabetes, dataset2$obesity)
+
+#Paciente apenas com diabetes
+dataset2 <- dataset %>% filter(
+  dataset$asthma == "Nao" & dataset$cardiopathy == "Nao" &
+    dataset$obesity == "Sim" & dataset$diabetes == "Nao"
+)
+table(dataset2$obesity)
+prop.table(table(dataset2$obesity, dataset2$censure))
+prop.table(table(dataset2$obesity, dataset2$icu))
+
+
+#Tabelas cruzadas
+CrossTable(schooling, censure, digits = 3)
+CrossTable(sex, censure, digits = 3)
+CrossTable(ethnicities, censure, digits = 3)
+CrossTable(age_group, censure, digits = 3)
+CrossTable(icu, censure, digits = 3)
+CrossTable(asthma, censure, digits = 3)
+CrossTable(cardiopathy, censure, digits = 3)
+CrossTable(diabetes, censure, digits = 3)
+CrossTable(obesity, censure, digits = 3)
+CrossTable(age_group, asthma, digits = 3)
+CrossTable(age_group, cardiopathy, digits = 3)
+CrossTable(age_group, diabetes, digits = 3)
+CrossTable(age_group, obesity, digits = 3)
+
+
+#Gr·fico
+ggplot(data = dataset, aes(x = censure)) +
+  geom_bar(stat='count', position = position_dodge()) +
+  facet_grid(icu ~ sex + age_group) 
+
+
+ggplot(data = dataset, aes(x = censure)) +
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)),stat='count',
+           position = position_dodge()) +
+  facet_grid(icu ~ sex + age_group) +
+  geom_text(aes( label = scales::percent(..prop..),
+                 y= ..prop.. ), stat= "count", vjust = -.2) +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()
+        ) + labs(title="", x = "", y = "")
+
+
+tabela_1 <- table(icu, censure)
 row.names(tabela_1) <- c("NAO UTI", "UTI")
 tabela_1
 
 p1 <- mosaicplot(tabela_1, col = c("aquamarine", "lightblue"), cex = 1.1,
            main = "Pacientes Internados" )
 
-
 Q2 <- chisq.test(tabela_1)
 Q2
 
 # Sexo X Obito
-tabela_2 <- table(sex, obito)
+tabela_2 <- table(sex, censure)
 row.names(tabela_2) <- c("Masculino", "Feminino")
 tabela_2
 
@@ -125,20 +209,19 @@ Q2 <- chisq.test(tabela_2)
 Q2
 
 # Obesidade X Obito
-tabela_3 <- table(obesity, obito)
+tabela_3 <- table(obesity, censure)
 row.names(tabela_3) <- c("Possui_Obesidade", "Nao_Possui_Obesidade")
 tabela_3
 
 p3 <- mosaicplot(tabela_3, col = c("#836FFF", "#483D8B"), cex = 1.1,
            main = "Pacientes com Obesidade" )
 
-
 Q2 <- chisq.test(tabela_3)
 Q2
 
 
 # Diabetes x Obito
-tabela_4 <- table(diabetes, obito)
+tabela_4 <- table(diabetes, censure)
 row.names(tabela_4) <- c("Possui_Diabetes", "Nao_Possui_Diabetes")
 tabela_4
 
@@ -152,7 +235,7 @@ Q2 <- chisq.test(tabela_4)
 Q2
 
 # Cardiopatia X Obito
-tabela_5 <- table(cardiopathy, obito)
+tabela_5 <- table(cardiopathy, censure)
 row.names(tabela_5) <- c("Possui_Cardiopatia", "Nao_Possui_Cardiopatia")
 tabela_5
 barplot(tabela_5,
@@ -164,7 +247,7 @@ Q2 <- chisq.test(tabela_5)
 Q2
 
 # Asma X Obito
-tabela_6 <- table(asthma, obito)
+tabela_6 <- table(asthma, censure)
 row.names(tabela_6) <- c("Possui_Asma", "Nao_Possui_Asma")
 tabela_6
 
@@ -178,7 +261,7 @@ Q2 <- chisq.test(tabela_6)
 Q2
 
 #Idade X Obito
-tabela_7 <- table(age_group, obito)
+tabela_7 <- table(age_group, censure)
 tabela_7
 
 barplot(tabela_7,
@@ -194,7 +277,7 @@ Q2
 
 
 # Escolaridade X Obito
-tabela_8 <- table(schooling, obito)
+tabela_8 <- table(schooling, censure)
 tabela_8
 
 barplot(tabela_8,
@@ -210,7 +293,9 @@ Q2
 
 
 # Raca X Obito
-tabela_9 <- table(ethnicities, obito)
+
+
+tabela_9 <- table(ethnicities, censure)
 tabela_9
 
 barplot(tabela_9,
@@ -231,108 +316,314 @@ Q2
 # Gr√°ficos de Sobreviv√™ncia de Kaplan-Meier, gr√°fico de taxa (fun√ß√£o) falha acumulada
 # e teste logRANK.
 
+attach(dataset)
+
+km <- dataset %>% 
+  with(survfit(Surv(time_hospitalization,censure) ~ 1))
+
+ggsurvplot(km, risk.table = F,
+           legend = "bottom",
+           pval = TRUE,
+           ggtheme = theme_bw(),
+           data = dataset)
+## sexo
+km_0 <- dataset %>% 
+  with(survfit(Surv(time_symptoms,censure) ~ sex))
+
+ggsurvplot(km_0, risk.table = F,
+           size = 1,
+           legend = "bottom",
+           legend.title = "Sexo",
+           pval = FALSE,
+           ggtheme = theme_bw(),
+           legend.labs = c("Masculino", "Feminino"),
+           data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade de SobrevivÍncia')
+
+ggsurvplot(km_0, conf.int = F,
+           size = 1,
+           surv.median.line = "hv",
+           risk.table = F, risk.table.col = "strata",
+           legend = "bottom",
+           legend.title = "Sexo",
+           ggtheme = theme_bw(),
+           legend.labs = c("Masculino", "Feminino"),
+           fun = "event", data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade Acumulada de SobrevivÍncia')
+
+
 ## UTI
 km_1 <- dataset %>% 
   with(survfit(Surv(time_symptoms,censure) ~ icu))
 
-p1 <- ggsurvplot(km_1, risk.table = F,
+ggsurvplot(km_1, risk.table = F,
+           size = 1,
            palette = c("#FF9E29", "#86AA00"),
-           data = dataset)
+           legend = "bottom",
+           legend.title = "UTI",
+           legend.labs = c("N„o", "Sim"),
+           pval = F,
+           ggtheme = theme_bw(),
+           data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade de SobrevivÍncia')
 
-ggsurvplot(km_1, conf.int = F, 
+ggsurvplot(km_1, conf.int = F,
+           size = 1,
+           surv.median.line = "hv",
            palette = c("#FF9E29", "#86AA00"),
            risk.table = F, risk.table.col = "strata",
-           fun = "event", data = dataset)
-
-survdiff(Surv(time_symptoms,censure) ~ icu, rho=0)
+           legend = "bottom",
+           legend.title = "UTI",
+           ggtheme = theme_bw(),
+           legend.labs = c("N„o", "Sim"),
+           fun = "event", data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade Acumulada de SobrevivÍncia')
 
 ## ASMA
 km_2 <- dataset %>% 
   with(survfit(Surv(time_symptoms,censure) ~ asthma))
 
-p2 <- ggsurvplot(km_2, risk.table = F,
+ggsurvplot(km_2, risk.table = F,
+           size = 1,
            palette = c("#11F872", "#1DF0EC"),
-           data = dataset)
+           legend = "bottom",
+           legend.title = "Asma",
+           legend.labs = c("N„o", "Sim"),
+           pval = F,
+           ggtheme = theme_bw(),
+           data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade de SobrevivÍncia')
 
-ggsurvplot(km_2, conf.int = F, 
+ggsurvplot(km_2, conf.int = F,
+           size = 1,
+           surv.median.line = "hv",
            palette = c("#11F872", "#1DF0EC"),
            risk.table = F, risk.table.col = "strata",
-           fun = "event", data = dataset)
+           legend = "bottom",
+           legend.title = "Asma",
+           legend.labs = c("N„o", "Sim"),
+           ggtheme = theme_bw(),
+           fun = "event", data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade Acumulada de SobrevivÍncia')
 
-survdiff(Surv(time_symptoms,censure) ~ asthma, rho=0)
+
 
 ##CARDIOPATIA
 km_3 <- dataset %>% 
   with(survfit(Surv(time_symptoms,censure) ~ cardiopathy))
 
-p3 <- ggsurvplot(km_3, risk.table = F,
+ggsurvplot(km_3, risk.table = F,
+           size = 1,
            palette = c("#0FD99C", "#0FA7D9"),
-           data = dataset)
+           legend = "bottom",
+           legend.title = "Cardiopatia",
+           legend.labs = c("N„o", "Sim"),
+           pval = F,
+           ggtheme = theme_bw(),
+           data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade de SobrevivÍncia')
 
 ggsurvplot(km_3, conf.int = F, 
+           size = 1,
+           surv.median.line = "hv",
            palette = c("#0FD99C", "#0FA7D9"),
            risk.table = F, risk.table.col = "strata",
-           fun = "event", data = dataset)
+           legend = "bottom",
+           legend.title = "Cardiopatia",
+           legend.labs = c("N„o", "Sim"),
+           ggtheme = theme_bw(),
+           fun = "event", data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade Acumulada de SobrevivÍncia')
 
-survdiff(Surv(time_symptoms,censure) ~ cardiopathy, rho=0)
 
 #DIABETES
 km_4 <- dataset %>% 
   with(survfit(Surv(time_symptoms, censure) ~  diabetes))
 
-p4 <- ggsurvplot(km_4, risk.table = F,
+ggsurvplot(km_4, risk.table = F,
+           size = 1,
            palette = c("#FAC0EE", "#6125D9"),
-           data = dataset)
+           legend = "bottom",
+           legend.title = "Diabetes",
+           legend.labs = c("N„o", "Sim"),
+           pval = F,
+           ggtheme = theme_bw(),
+           data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade de SobrevivÍncia')
 
-ggsurvplot(km_4, conf.int = F, 
+ggsurvplot(km_4, conf.int = F,
+           size = 1,
+           surv.median.line = "hv",
            palette = c("#FAC0EE", "#6125D9"),
            risk.table = F, risk.table.col = "strata",
-           fun = "event", data = dataset)
-
-survdiff(Surv(time_symptoms, censure) ~  diabetes, rho=0)
+           legend = "bottom",
+           legend.title = "Diabetes",
+           legend.labs = c("N„o", "Sim"),
+           ggtheme = theme_bw(),
+           fun = "event", data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade Acumulada de SobrevivÍncia')
 
 
 ## ESCOLARIDADE
 km_5 <- dataset %>% 
   with(survfit(Surv(time_symptoms,censure) ~  schooling))
 
-p5 <- ggsurvplot(km_5, risk.table = F,
+ggsurvplot(km_5, risk.table = F,
+           size = 1,
            palette = c("#F0E207", "#43BAF0", "#7289F0", "#F034C2", "#F08D18"),
-           data = dataset)
+           legend = "bottom",
+           legend.title = "Escolaridade",
+           legend.labs = c("Sem Escolaridade", "Fundamental 1", "Fundamental 2", "MÈdio", "Superior"),
+           pval = F,
+           ggtheme = theme_bw(),
+           data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade de SobrevivÍncia')
 
-ggsurvplot(km_5, conf.int = F, 
+ggsurvplot(km_5, conf.int = F,
+           size = 1,
+           surv.median.line = "hv",
            palette = c("#F0E207", "#43BAF0", "#7289F0", "#F034C2", "#F08D18"),
            risk.table = F, risk.table.col = "strata",
-           fun = "event", data = dataset)
+           legend = "bottom",
+           legend.title = "Escolaridade",
+           legend.labs = c("Sem Escolaridade", "Fundamental 1", "Fundamental 2", "MÈdio", "Superior"),
+           ggtheme = theme_bw(),
+           fun = "event", data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade Acumulada de SobrevivÍncia')
 
-
-survdiff(Surv(time_symptoms,censure) ~ schooling, rho=0)
 
 #Obesidade
 km_6 <- dataset %>% 
   with(survfit(Surv(time_symptoms, censure) ~  obesity))
 
-p6 <- ggsurvplot(km_6, risk.table = T,
+ggsurvplot(km_6, risk.table = F,
+           size = 1,
            palette = c("#F0E257", "#43BAF8"),
-           data = dataset)
+           legend = "bottom",
+           legend.title = "Obesidade",
+           legend.labs = c("N„o", "Sim"),
+           pval = F,
+           ggtheme = theme_bw(),
+           data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade de SobrevivÍncia')
 
-ggsurvplot(km_6, conf.int = F, 
+ggsurvplot(km_6, conf.int = F,
+           size = 1,
+           surv.median.line = "hv",
            palette = c("#F0E257","#43BAF8"),
            risk.table = F, risk.table.col = "strata",
-           fun = "event", data = dataset)
+           legend = "bottom",
+           legend.title = "Obesidade",
+           legend.labs = c("N„o", "Sim"),
+           ggtheme = theme_bw(),
+           fun = "event", data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade Acumulada de SobrevivÍncia')
 
 
+#Faixa Et·ria
+
+km_7 <- dataset %>% 
+  with(survfit(Surv(time_symptoms, censure) ~  age_group))
+
+ggsurvplot(km_7, risk.table = F,
+           size = 1,
+           palette = c("#F0E257", "#43BAF8", "#FFBAF8"),
+           legend = "bottom",
+           legend.title = "Faixa Etaria",
+           legend.labs = c("Jovem", "Adulto", 'Idoso'),
+           pval = F,
+           ggtheme = theme_bw(),
+           data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade de SobrevivÍncia')
+
+ggsurvplot(km_7, conf.int = F,
+           size = 1,
+           surv.median.line = "hv",
+           palette = c("#F0E257","#43BAF8", "#FFBAF8"),
+           risk.table = F, risk.table.col = "strata",
+           legend = "bottom",
+           legend.title = "Faixa Etaria",
+           legend.labs = c("Jovem", "Adulto", 'Idoso'),
+           ggtheme = theme_bw(),
+           fun = "event", data = dataset,
+           xlab = 'Tempo de SobrevivÍncia em Dias',
+           ylab = 'Probabilidade Acumulada de SobrevivÍncia')
+
+
+
+
+#sexo
+survdiff(Surv(time_symptoms,censure) ~ sex, rho=0)
+coxph(Surv(time_symptoms, censure) ~ sex, data = dataset)
+
+#uti
+survdiff(Surv(time_symptoms,censure) ~ icu, rho=0)
+coxph(Surv(time_symptoms, censure) ~ icu, data = dataset)
+
+#asma
+survdiff(Surv(time_symptoms,censure) ~ asthma, rho=0)
+coxph(Surv(time_symptoms, censure) ~ asthma, data = dataset)
+
+#cardiopatia
+survdiff(Surv(time_symptoms,censure) ~ cardiopathy, rho=0)
+coxph(Surv(time_symptoms, censure) ~ cardiopathy, data = dataset)
+
+#diabetes
+survdiff(Surv(time_symptoms, censure) ~  diabetes, rho=0)
+coxph(Surv(time_symptoms, censure) ~ cardiopathy, data = dataset)
+
+#obesidade
 survdiff(Surv(time_symptoms, censure) ~  obesity, rho=0)
+coxph(Surv(time_symptoms, censure) ~ obesity, data = dataset)
 
- # figura
+#faixa etaria
+survdiff(Surv(time_symptoms, censure) ~  age_group, rho=0)
+coxph(Surv(time_symptoms, censure) ~ age_group, data = dataset)
+
+#escolaridade
+survdiff(Surv(time_symptoms,censure) ~ schooling, rho=0)
+coxph(Surv(time_symptoms, censure) ~ schooling, data = dataset)
+
+
+
 
 ## Residuos de Schoenfeld
-cox_covid <- coxph(Surv(time_symptoms,censure) ~ icu + asthma + cardiopathy +
-                     diabetes + obesity + age_group +  schooling)
-
+cox_covid <- coxph(Surv(time_symptoms,censure) ~ icu + 
+                     sex + asthma + cardiopathy+ diabetes+ 
+                     + obesity + age_group + schooling)
 summary(cox_covid)
-
+cox_covid %>% gtsummary::tbl_regression(exp = TRUE)
 par(mfrow = c(3,3))
 plot(cox.zph(cox_covid))
 
+
+
+
+##-------------------------------------------------------------------------##
+ebola <- read.csv(url("https://whitlockschluter3e.zoology.ubc.ca/Data/chapter21/chap21e1EbolaMalaria.csv"))
+head(ebola)
+prop <- table(ebola$outcome)
+prop.table(prop)
+
+kmm <- ebola %>% with(survfit(Surv(time, outcome) ~  1))
+kmm
+
+ggsurvplot(kmm, risk.table = F,
+           data = ebola)
+mle2.GTDL(t=ebola$time,start=c(1,-0.2,1), formula=~1,censur = ebola$outcome)
 #-----GTDL--------------------------------------------------------------------#
